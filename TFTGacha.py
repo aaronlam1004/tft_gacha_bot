@@ -12,6 +12,18 @@ class TFTGacha():
 		for champion in champions:
 			self.champion_dict[champion['cost']].append((champion['name'], champion['traits']))	
 
+		f = open('./set3/items.json')
+		items = json.load(f)
+		self.item_dict = defaultdict(list)
+		self.item_dict["base"] = items[0: 9]
+		self.item_dict["combined"] = items[9:]
+
+	def _getChampionDict(self):
+		return self.champion_dict
+
+	def _getItemDict(self):
+		return self.item_dict
+	
 	def summonChampion(self, level):
 		prob_dict = {
 			1: {1: 1, 2: 0, 3: 0, 4: 0, 5: 0},
