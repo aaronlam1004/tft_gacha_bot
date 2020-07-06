@@ -1,5 +1,6 @@
 import discord
 import re
+import json
 import sys
 from TFTGacha import TFTGacha
 
@@ -7,6 +8,10 @@ if __name__ == '__main__':
 
 	client = discord.Client()
 	tft = TFTGacha()
+	
+	data = {}
+	with open('storage.json', 'r') as json_file:
+		data = json.load(json_file)
 
 	tier_colors = {
 		1: 0x172433,
@@ -33,37 +38,59 @@ if __name__ == '__main__':
 		if len(sys.argv) == 2 and sys.argv[1] == "--update":
 			for guild in client.guilds:
 				for channel in guild.text_channels:
-					await channel.send("Updating server...")
+					await channel.send("Removing all custom emojis from server...")
 			for e in client.emojis:
 				await discord.Emoji.delete(e)
 			for guild in client.guilds:
 				for channel in guild.text_channels:
-					await channel.send("Server finished updating!")
+					await channel.send("Bot finished updating!")
 
 	@client.event
 	async def on_message(message):
 		if message.author == client.user:
 			return
 
-		elif message.content.startswith('$tft champion') or message.content.startswith('$tft c'):
+		elif message.content.startswith('$tft summon') or message.content.startswith('$tft s'):
 			for _ in range(3):
+				imgs = []
+				item = tft.summonItem(5)
+				item_id = str(tft.getItemId(item)).zfill(2)
+				item_img = discord.File('./set3/items/' + str(item_id) + '.png', filename = "item.png")
+				imgs.append(item_img)
+
 				champ = tft.summonChampion(5)
 				champ_img = discord.File(('./set3/champions/' + str(champ).lower() ).replace(" ", "").replace("-", "").replace("'", "") + '.png', filename = "champ.png")
+				imgs.append(champ_img)
 				champ_descrip = ""
 
-				for trait in tft.getTraits(champ):
+				for trait in tft.getChampionTraits(champ):
 					#emoji = await find_emoji(message, trait)
 					#champ_descrip = champ_descrip + trait + " " + str(emoji) + "\n" 
-					champ_descrip = champ_descrip + trait + "\n" 
+					champ_descrip = champ_descrip + trait + "\n"
 
 				embedded = discord.Embed(
-					title = str(champ),
+					title = champ,
 					description = champ_descrip,
-					colour = discord.Colour(tier_colors[tft.getTier(champ)])
+					colour = discord.Colour(tier_colors[tft.getChampionTier(champ)])
 				)
-				embedded.set_thumbnail(url = "attachment://champ.png")
 
-				await message.channel.send(file = champ_img, embed = embedded)
+				embedded.set_thumbnail(url = "attachment://champ.png")
+				embedded.set_footer(text  = item, icon_url = "attachment://item.png")
+
+				await message.channel.send(files = imgs, embed = embedded)
+		
+		elif message.content.startswith('$tft list') or message.content.startswith('$tft ls') :
+			if not message.author in data:
+				data[str(message.author)] = {"title": str(message.author) + '\'s Collection', "thumbnail": "./sadporo.png", "champions": [], "items": []}
+				with open("storage.json", 'w') as outfile:
+					json.dump(data, outfile)
+
+			thumb = discord.File(data[str(message.author)]["thumbnail"], filename = "thumbnail.png")
+			embedded = discord.Embed(
+				title = data[str(message.author)]["title"]
+			)
+			embedded.set_thumbnail(url = "attachment://thumbnail.png")
+			await message.channel.send(file = thumb, embed = embedded)
 
 	@client.event
 	async def on_reaction_add(reaction, user):
@@ -73,4 +100,5 @@ if __name__ == '__main__':
 		except:
 			pass	
 
-	client.run('DISCORD BOT KEY GOES HERE')
+	with open("key.txt", "r") as key:
+		client.run(key.read().rstrip("\n"))
