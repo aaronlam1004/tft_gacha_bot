@@ -5,21 +5,21 @@ from collections import defaultdict
 class TFTGacha():
 
 	def __init__(self):
-		f = open('./set3/champions.json')
+		f = open("./set3/champions.json")
 		champions = json.load(f)
 
 		self.champion_dict = defaultdict(list)
 		for champion in champions:
 			self.champion_dict[champion["cost"]].append({"name": champion["name"], "traits": champion["traits"]})	
 
-		f = open('./set3/items.json')
+		f = open("./set3/items.json")
 		items = json.load(f)
 		self.item_dict = defaultdict(list)
 		self.item_dict["base"] = items[0: 7]
-		self.item_dict["base"].append(items[9])
+		self.item_dict["base"].append(items[8])
 
 		self.item_dict["combined"] = items[9:]
-		self.item_dict["base"].append(items[8])
+		self.item_dict["combined"].append(items[7])
 
 	def _getChampionDict(self):
 		return self.champion_dict
@@ -87,4 +87,3 @@ class TFTGacha():
 			for item in self.item_dict[k]:
 				if chosen == item["name"]:
 					return item["id"]
-					
