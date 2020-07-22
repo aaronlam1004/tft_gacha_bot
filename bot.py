@@ -3,6 +3,7 @@ import sys
 from os import path
 from TFTGacha import TFTGacha
 from TFTDatabase import TFTDatabase
+import io
 
 if __name__ == '__main__':
 
@@ -39,11 +40,11 @@ if __name__ == '__main__':
 			for _ in range(3):
 				imgs = []
 				item = tft.summonItem(tft_user.level)
-				item_img = discord.File("./set3/items/" + str(tft.getItemId(item)).zfill(2) + ".png", filename = "item.png")
+				item_img = discord.File(tft.getItemImage(item), filename = "item.png")
 				imgs.append(item_img)
 
 				champ = tft.summonChampion(tft_user.level)
-				champ_img = discord.File(("./set3/champions/" + str(champ).lower() ).replace(" ", "").replace("-", "").replace("'", "") + ".png", filename = "champ.png")
+				champ_img = discord.File(tft.getChampionImage(champ), filename = "champ.png")
 				imgs.append(champ_img)
 				champ_descrip = ""
 
@@ -53,7 +54,7 @@ if __name__ == '__main__':
 					'''
 					trait_name = trait.lower().replace(" ", "").replace("-", "").replace("'", "")
 					trait_img = None
-					with open("./set3/traits/" + trait_name + ".png", "rb") as image:
+					with open("./resources/set3/traits/" + trait_name + ".png", "rb") as image:
 						trait_img = image.read() 
 					trait_emoji = await message.guild.create_custom_emoji(name = trait_name, image = trait_img)
 					champ_descrip = trait + " " +  str(trait_emoji) + "\n"
@@ -75,7 +76,7 @@ if __name__ == '__main__':
 				for emoji in emojis:
 					await emoji.delete()
 				'''
-		elif message.content.startswith(client_mention + " profile") or message.content.startswith(client_mention + " p") :
+		elif message.content.startswith(client_mention + " collection") or message.content.startswith(client_mention + " ls") :
 			if not database.userExists(message.author):
 				database.addUser(message.author)
 			tft_user = database.getUser(message.author)
@@ -103,11 +104,6 @@ if __name__ == '__main__':
 					owned_items += item + "\n"
 
 			embedded.add_field(name = "Items", value = owned_items, inline = False)
-
-			embedded.add_field(name = "Level", value = str(tft_user.level))
-			embedded.add_field(name = "XP", value = str(tft_user.xp))
-			embedded.add_field(name = "Gold", value = str(tft_user.gold))
-			
 			await message.channel.send(file = thumb, embed = embedded)
 
 		elif message.content.startswith(client_mention + " icon") or message.content.startswith(client_mention + " i"):
@@ -125,9 +121,8 @@ if __name__ == '__main__':
 					if i != len(sent)	- 1:
 						champ += " "
 
-				thumbnail = "./set3/champions/" + champ.lower().replace(" ", "").replace("-", "").replace("'", "") + ".png"
-				if not tft_user.setThumbnail(champ, thumbnail):
-					await message.channel.send(message.author.mention + " Could not set profile icon to **" + champ + "** because it has not been claimed.")
+				if not tft_user.setThumbnail(champ, tft.getChampionImage(champ)):
+					await message.channel.send(message.author.mention + " Could not set profile icon to **" + champ + "** because you do not have it.")
 				else:
 					thumb = discord.File(thumbnail, filename = "thumbnail.png")
 					embedded = discord.Embed(
@@ -145,17 +140,73 @@ if __name__ == '__main__':
 					database.addUser(message.author)
 				tft_user = database.getUser(message.author)
 
-		elif message.content.startswith(client_mention + " get xp") or message.content.startswith(client_mention + " xp"):
+				champ = ""
+				for i in range(2, len(sent)):
+					champ += sent[i] 
+					if i != len(sent)	- 1:
+						champ += " "
+
+				if tft_user.removeChampion(champ):
+					if tft.getChampionImage(champ) == tft_user.thumbnail and champ not in tft_user.champions:
+						if len(tft_user.champions) == 0:
+							tft_user.setThumbnail()
+						else:
+							tft_user.setThumbnail(tft_user.champions[0], tft.getChampionImage(tft_user.champions[0]))
+					gold = tft.getChampionTier(champ)
+					tft_user.changeGold(gold)
+					await message.channel.send(message.author.mention + " Successfully sold **" + champ + "** for " + str(gold) + " gold.")
+				else:
+					await message.channel.send(message.author.mention + " Cannot sell **" + champ + "** because you do not own it.")
+
+		elif message.content.startswith(client_mention + " lvl") or message.content.startswith(client_mention + " up"):
 			if not database.userExists(message.author):
 				database.addUser(message.author)
 			tft_user = database.getUser(message.author)
+
+			avatar_asset = message.author.avatar_url_as(format = "jpg")
+			avatar_buffer = io.BytesIO()
+			await avatar_asset.save(avatar_buffer)
+			avatar_buffer.seek(0)
+
 			if tft_user.level == 1:
 				tft_user.gainXP(0)
-			elif tft_user.goldChange(-4):
-				tft_user.gainXP(4)
+				await message.channel.send(message.author.mention + " has leveled up! You are now level **" + str(tft_user.level) + "**!")
+				progressbar = discord.File(tft_user.getLevel(avatar_buffer, message.author), filename = "progressbar.png")
+				await message.channel.send(file = progressbar)
+			elif tft_user.changeGold(-4):
+				progressbar = discord.File(tft_user.getLevel(avatar_buffer, message.author), filename = "progressbar.png")
+				if tft_user.gainXP(4):
+					await message.channel.send(message.author.mention + " has leveled up! You are now level **" + str(tft_user.level) + "**!")
+					progressbar = discord.File(tft_user.getLevel(avatar_buffer, message.author), filename = "progressbar.png")
+					await message.channel.send(file = progressbar)
+				else:
+					progressbar = discord.File(tft_user.getLevel(avatar_buffer, message.author), filename = "progressbar.png")
+					await message.channel.send(file = progressbar)
 			else:
 				await message.channel.send(message.author.mention + " **You do not have enough gold to gain XP.**")
-				
+
+		elif message.content.startswith(client_mention + " profile") or message.content.startswith(client_mention + " me"):
+			if not database.userExists(message.author):
+				database.addUser(message.author)
+			
+			tft_user = database.getUser(message.author)
+
+			avatar_asset = message.author.avatar_url_as(format = "jpg")
+			avatar_buffer = io.BytesIO()
+			await avatar_asset.save(avatar_buffer)
+			avatar_buffer.seek(0)
+			
+			await message.channel.send(file = discord.File(tft_user.getLevel(avatar_buffer, message.author), filename = "userprogress.png"))
+
+		elif message.content.startswith(client_mention + " help") or message.content.startswith(client_mention + " h"):
+			text = ""
+			with open("./tutorial.txt", "r") as infile:
+				text = infile.read()
+			
+			while len(text) > 2000:
+				await message.author.send(text[0:2000])
+				text = text[2000:]
+			await message.author.send(text)
 	
 	@client.event
 	async def on_reaction_add(reaction, user):
@@ -180,8 +231,8 @@ if __name__ == '__main__':
 					tft_user = database.getUser(user)
 					tft_user.addChampion(champ)
 
-					if tft_user.thumbnail == "./sadporo.png":
-						thumbnail = "./set3/champions/" + champ.lower().replace(" ", "").replace("-", "").replace("'", "") + ".png"
+					if tft_user.thumbnail == "./resources/sadporo.png":
+						thumbnail = "./resources/set3/champions/" + champ.lower().replace(" ", "").replace("-", "").replace("'", "") + ".png"
 						tft_user.setThumbnail(champ, thumbnail)
 
 					tft_user.addItem(item)

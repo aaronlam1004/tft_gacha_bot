@@ -5,14 +5,14 @@ from collections import defaultdict
 class TFTGacha():
 
 	def __init__(self):
-		f = open("./set3/champions.json")
+		f = open("./resources/set3/champions.json")
 		champions = json.load(f)
 
 		self.champion_dict = defaultdict(list)
 		for champion in champions:
 			self.champion_dict[champion["cost"]].append({"name": champion["name"], "traits": champion["traits"]})	
 
-		f = open("./set3/items.json")
+		f = open("./resources/set3/items.json")
 		items = json.load(f)
 		self.item_dict = defaultdict(list)
 		self.item_dict["base"] = items[0: 7]
@@ -48,6 +48,21 @@ class TFTGacha():
 				champion_select = random.randint(0, len(self.champion_dict[k]) - 1) 
 				return self.champion_dict[k][champion_select]["name"]
 
+	def getChampionTraits(self, champion):
+		for k in self.champion_dict.keys():
+			for champ in self.champion_dict[k]:
+				if champ["name"] == champion:
+					return champ["traits"] 
+
+	def getChampionTier(self, champion):
+		for k in self.champion_dict.keys():
+			for champ in self.champion_dict[k]:
+				if champ["name"] == champion:
+					return k
+
+	def getChampionImage(self, champion):
+		return ("./resources/set3/champions/" + str(champion).lower()).replace(" ", "").replace("-", "").replace("'", "") + ".png"
+
 	def summonItem(self, level):
 		prob_dict = {
 			1: 1,
@@ -68,22 +83,12 @@ class TFTGacha():
 		else:
 			item_select = random.randint(0, len(self.item_dict["combined"]) - 1) 
 			return self.item_dict["combined"][item_select]["name"]
-			
-
-	def getChampionTraits(self, champion):
-		for k in self.champion_dict.keys():
-			for champ in self.champion_dict[k]:
-				if champ["name"] == champion:
-					return champ["traits"] 
-
-	def getChampionTier(self, champion):
-		for k in self.champion_dict.keys():
-			for champ in self.champion_dict[k]:
-				if champ["name"] == champion:
-					return k
 
 	def getItemId(self, chosen):
 		for k in self.item_dict.keys():
 			for item in self.item_dict[k]:
 				if chosen == item["name"]:
 					return item["id"]
+
+	def getItemImage(self, item):
+		return "./resources/set3/items/" + str(self.getItemId(item)).zfill(2) + ".png"

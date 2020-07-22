@@ -1,0 +1,18 @@
+@TFTGacha roll
+@TFTGacha r
+
+@TFTGacha collection
+@TFTGacha ls
+
+@TFTGacha profile
+@TFTGacha me 
+
+@TFTGacha icon
+@TFTGacha i
+ 
+@TFTGacha lvl
+@TFTGacha up 
+
+@TFTGacha sell [champion/item]
+
+@TFTGacha gift [champion/item/xp]
