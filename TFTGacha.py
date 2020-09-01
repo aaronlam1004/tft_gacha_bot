@@ -27,6 +27,7 @@ class TFTGacha():
 	def _getItemDict(self):
 		return self.item_dict
 	
+	# Logic to choose a champion
 	def summonChampion(self, level):
 		prob_dict = {
 			1: {1: 1, 2: 0, 3: 0, 4: 0, 5: 0},
@@ -48,21 +49,40 @@ class TFTGacha():
 				champion_select = random.randint(0, len(self.champion_dict[k]) - 1) 
 				return self.champion_dict[k][champion_select]["name"]
 
+	# Checks to see if champion exists
+	def championExists(self, champion):
+		for k in self.champion_dict.keys():
+			for champ in self.champion_dict[k]:
+				if champ["name"].lower() == champion.lower():
+					return True
+		return False
+
+	# Gets correct spelling of champion
+	def getChampionName(self, champion):
+		for k in self.champion_dict.keys():
+			for champ in self.champion_dict[k]:
+				if champ["name"].lower() == champion.lower():
+					return champ["name"]
+
+	# Get champion traits from champion name
 	def getChampionTraits(self, champion):
 		for k in self.champion_dict.keys():
 			for champ in self.champion_dict[k]:
-				if champ["name"] == champion:
+				if champ["name"].lower() == champion.lower():
 					return champ["traits"] 
 
+	# Get champion tier (normal -> legendary) from champion name
 	def getChampionTier(self, champion):
 		for k in self.champion_dict.keys():
 			for champ in self.champion_dict[k]:
-				if champ["name"] == champion:
+				if champ["name"].lower() == champion.lower():
 					return k
 
+	# Get champion image from champion name
 	def getChampionImage(self, champion):
 		return ("./resources/set3/champions/" + str(champion).lower()).replace(" ", "").replace("-", "").replace("'", "") + ".png"
 
+	# Logic to choose an item
 	def summonItem(self, level):
 		prob_dict = {
 			1: 1,
@@ -84,11 +104,32 @@ class TFTGacha():
 			item_select = random.randint(0, len(self.item_dict["combined"]) - 1) 
 			return self.item_dict["combined"][item_select]["name"]
 
+	# Get item id from item name
 	def getItemId(self, chosen):
 		for k in self.item_dict.keys():
 			for item in self.item_dict[k]:
-				if chosen == item["name"]:
+				if chosen.lower() == item["name"].lower():
 					return item["id"]
 
+	# Gets correct spelling of item
+	def getItemName(self, chosen):
+		for k in self.item_dict.keys():
+			for item in self.item_dict[k]:
+				if chosen.lower() == item["name"].lower():
+					return item["name"]
+
+	# Checks to see if item exists
+	def itemExists(self, chosen):
+		for k in self.item_dict.keys():
+			for item in self.item_dict[k]:
+				if chosen.lower() == item["name"].lower():
+					return True
+		return False
+
+	# Get item image from item name
 	def getItemImage(self, item):
 		return "./resources/set3/items/" + str(self.getItemId(item)).zfill(2) + ".png"
+	
+	# Get trait image from trait name
+	def getTraitImage(self, trait):
+		return ("./resources/set3/traits/" + str(trait).lower()).replace(" ", "").replace("-", "").replace("'", "") + ".png"

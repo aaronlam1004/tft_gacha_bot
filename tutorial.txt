@@ -1,18 +1,31 @@
 @TFTGacha roll
 @TFTGacha r
 
+- Summons champions with items. React with 👾 to claim champion and item in exchange to gold value.
+
 @TFTGacha collection
 @TFTGacha ls
+
+- View your collection of champions and items.
 
 @TFTGacha profile
 @TFTGacha me 
 
-@TFTGacha icon
-@TFTGacha i
+- View your profile.
+
+@TFTGacha icon [champion]
+
+- Sets the champion image on your profile to [champion] if you have it.
  
 @TFTGacha lvl
 @TFTGacha up 
 
+- Levels up user by 4 XP in exchange for 4 gold.
+
+@TFTGacha info [champion]
+
+- Gets info on [champion] such as traits and how much gold they can be sold for.
+
 @TFTGacha sell [champion/item]
 
-@TFTGacha gift [champion/item/xp]
+- Sells [champion] for their gold value.

@@ -1,0 +1,4 @@
+discord
+bson
+pillow
+pymongo
